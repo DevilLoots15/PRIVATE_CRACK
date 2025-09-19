@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessage = document.getElementById('errorMessage');
     
     // Update backend URL based on your Render deployment
-    const BACKEND_URL = 'https://your-render-app.onrender.com';
+    const BACKEND_URL = 'https://private-crack.onrender.com/';
     
     // List of all platforms to check
     const platforms = [
