@@ -15,12 +15,14 @@
 
         <div class="upload-section">
             <h2>Upload Combo File</h2>
-            <div class="file-upload">
-                <input type="file" id="comboFile" accept=".txt">
-                <label for="comboFile">Choose file</label>
-                <span id="fileName">No file chosen</span>
-            </div>
-            <button id="checkButton" disabled>Check Combos</button>
+            <form id="uploadForm">
+                <div class="file-upload">
+                    <input type="file" id="comboFile" name="file" accept=".txt" required>
+                    <label for="comboFile">Choose file</label>
+                    <span id="fileName">No file chosen</span>
+                </div>
+                <button type="submit" id="checkButton" disabled>Check Combos</button>
+            </form>
         </div>
 
         <div class="progress-section hidden">
@@ -53,10 +55,17 @@
                     <thead>
                         <tr>
                             <th>Combo</th>
-                            <th>Netflix</th>
-                            <th>Spotify</th>
+                            <th>Plex</th>
+                            <th>Steam</th>
+                            <th>GitHub</th>
+                            <th>Origin</th>
+                            <th>BattleNet</th>
+                            <th>Roblox</th>
                             <th>Discord</th>
-                            <!-- Add more platforms as needed -->
+                            <th>Reddit</th>
+                            <th>Spotify</th>
+                            <th>Trello</th>
+                            <th>Netflix</th>
                         </tr>
                     </thead>
                     <tbody id="resultsBody">
