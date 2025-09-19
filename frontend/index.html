@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combo Checker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Combo Checker</h1>
+            <p>Upload your combo list to check validity across multiple platforms</p>
+        </header>
+
+        <div class="upload-section">
+            <h2>Upload Combo File</h2>
+            <div class="file-upload">
+                <input type="file" id="comboFile" accept=".txt">
+                <label for="comboFile">Choose file</label>
+                <span id="fileName">No file chosen</span>
+            </div>
+            <button id="checkButton" disabled>Check Combos</button>
+        </div>
+
+        <div class="progress-section hidden">
+            <h2>Checking Progress</h2>
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
+            <p id="progressText">0%</p>
+        </div>
+
+        <div class="results-section hidden">
+            <h2>Results</h2>
+            <div class="results-summary">
+                <div class="summary-item">
+                    <span class="label">Total Combos:</span>
+                    <span id="totalCombos">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Valid Combos:</span>
+                    <span id="validCombos">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Completion Time:</span>
+                    <span id="completionTime">-</span>
+                </div>
+            </div>
+
+            <div class="results-table-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Combo</th>
+                            <th>Netflix</th>
+                            <th>Spotify</th>
+                            <th>Discord</th>
+                            <!-- Add more platforms as needed -->
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button id="downloadButton">Download Results</button>
+        </div>
+
+        <div class="error-section hidden" id="errorSection">
+            <h2>Error</h2>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
