@@ -5,6 +5,7 @@ import os
 import uuid
 import json
 from datetime import datetime
+import tempfile
 
 app = Flask(__name__)
 CORS(app)
@@ -15,13 +16,27 @@ results = {}
 @app.route('/api/check', methods=['POST'])
 def check_combos():
     try:
-        data = request.get_json()
-        if not data or 'combos' not in data:
-            return jsonify({'error': 'No combos provided'}), 400
+        # Check if file was uploaded
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
         
-        combos = data['combos']
-        if not isinstance(combos, list):
-            return jsonify({'error': 'Combos should be a list'}), 400
+        file = request.files['file']
+        
+        # Check if file is selected
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Check if file is a text file
+        if not file.filename.endswith('.txt'):
+            return jsonify({'error': 'File must be a .txt file'}), 400
+        
+        # Read and process the file
+        content = file.read().decode('utf-8')
+        combos = content.split('\n')
+        combos = [line.strip() for line in combos if line.strip()]
+        
+        if len(combos) == 0:
+            return jsonify({'error': 'No valid combos found in the file'}), 400
         
         # Generate a unique ID for this check
         check_id = str(uuid.uuid4())
