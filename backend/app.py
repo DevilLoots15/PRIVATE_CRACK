@@ -13,6 +13,17 @@ CORS(app)
 # Store results in memory (for production, use a database)
 results = {}
 
+@app.route('/')
+def home():
+    return jsonify({
+        'message': 'Combo Checker API is running',
+        'endpoints': {
+            'status': '/api/status',
+            'check_combos': '/api/check (POST)',
+            'get_results': '/api/results/<check_id> (GET)'
+        }
+    })
+
 @app.route('/api/check', methods=['POST'])
 def check_combos():
     try:
