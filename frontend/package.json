@@ -1,0 +1,13 @@
+{
+  "name": "combo-checker-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Combo Checker",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "echo 'No build step needed for static site'"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {}
+}
