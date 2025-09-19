@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorSection = document.getElementById('errorSection');
     const errorMessage = document.getElementById('errorMessage');
     
-    // Backend URL - Updated with your Render link
+    // Backend URL - Updated
     const BACKEND_URL = 'https://private-crack.onrender.com';
     
     // List of all platforms to check
