@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
     const fileInput = document.getElementById('comboFile');
     const fileName = document.getElementById('fileName');
     const checkButton = document.getElementById('checkButton');
@@ -17,6 +18,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update backend URL based on your Render deployment
     const BACKEND_URL = 'https://your-render-app.onrender.com';
     
+    // List of all platforms to check
+    const platforms = [
+        "Plex", "Steam", "GitHub", "Origin", "BattleNet", "Roblox",
+        "Discord", "Reddit", "Spotify", "Trello", "Netflix"
+    ];
+    
     let checkId = null;
     let combos = [];
     
@@ -25,24 +32,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (file) {
             fileName.textContent = file.name;
             checkButton.disabled = false;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const content = e.target.result;
-                combos = content.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0);
-            };
-            reader.readAsText(file);
         } else {
             fileName.textContent = 'No file chosen';
             checkButton.disabled = true;
         }
     });
     
-    checkButton.addEventListener('click', function() {
-        if (combos.length === 0) {
-            showError('No valid combos found in the file');
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const file = fileInput.files[0];
+        if (!file) {
+            showError('Please select a file first');
             return;
         }
         
@@ -54,13 +55,14 @@ document.addEventListener('DOMContentLoaded', function() {
         progressSection.classList.remove('hidden');
         updateProgress(0);
         
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('file', file);
+        
         // Send request to backend
         fetch(`${BACKEND_URL}/api/check`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ combos: combos })
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
@@ -135,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
             row.appendChild(comboCell);
             
             // Platform cells
-            ['Netflix', 'Spotify', 'Discord'].forEach(platform => {
+            platforms.forEach(platform => {
                 const platformCell = document.createElement('td');
                 const status = item.results[platform] || 'Bad';
                 platformCell.textContent = status;
@@ -177,11 +179,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function convertToCSV(results) {
-        const headers = ['Combo', ...websites];
+        const headers = ['Combo', ...platforms];
         const rows = results.map(item => {
             return [
-                item.combo,
-                ...websites.map(site => item.results[site] || 'Bad')
+                `"${item.combo}"`,  // Wrap in quotes to handle commas in combos
+                ...platforms.map(site => item.results[site] || 'Bad')
             ];
         });
         
