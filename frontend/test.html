@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Deployment Test</h1>
+    <p>If you can see this page, your Vercel deployment is working!</p>
+    
+    <div id="backend-test">
+        <h2>Backend Connection Test</h2>
+        <button onclick="testBackend()">Test Backend Connection</button>
+        <div id="backend-result"></div>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('https://your-render-app.onrender.com/api/status');
+                if (response.ok) {
+                    resultDiv.innerHTML = '<span class="success">✓ Backend is connected successfully!</span>';
+                } else {
+                    resultDiv.innerHTML = `<span class="error">✗ Backend returned error: ${response.status}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Cannot connect to backend: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
