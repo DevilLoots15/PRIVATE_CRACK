@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorSection = document.getElementById('errorSection');
     const errorMessage = document.getElementById('errorMessage');
     
-    // Update backend URL based on your Render deployment
-    const BACKEND_URL = 'https://private-crack.onrender.com/';
+    // Backend URL - Updated with your Render link
+    const BACKEND_URL = 'https://private-crack.onrender.com';
     
     // List of all platforms to check
     const platforms = [
@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let checkId = null;
     let combos = [];
+    
+    console.log('Combo Checker Frontend Loaded');
+    console.log('Backend URL:', BACKEND_URL);
     
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -64,17 +67,23 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.error) {
                 throw new Error(data.error);
             }
             
             checkId = data.check_id;
+            console.log('Check started with ID:', checkId);
             pollResults();
         })
         .catch(error => {
-            showError(error.message);
+            handleApiError(error, 'file upload');
             progressSection.classList.add('hidden');
         });
     });
@@ -82,14 +91,22 @@ document.addEventListener('DOMContentLoaded', function() {
     function pollResults() {
         if (!checkId) return;
         
+        console.log('Polling results for ID:', checkId);
+        
         fetch(`${BACKEND_URL}/api/results/${checkId}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
                     throw new Error(data.error);
                 }
                 
                 if (data.status === 'completed') {
+                    console.log('Check completed successfully');
                     displayResults(data.result);
                     progressSection.classList.add('hidden');
                     resultsSection.classList.remove('hidden');
@@ -101,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                showError(error.message);
+                handleApiError(error, 'polling results');
                 progressSection.classList.add('hidden');
             });
     }
@@ -147,13 +164,25 @@ document.addEventListener('DOMContentLoaded', function() {
             
             resultsBody.appendChild(row);
         });
+        
+        console.log('Displayed results for', results.length, 'combos');
     }
     
     downloadButton.addEventListener('click', function() {
-        if (!checkId) return;
+        if (!checkId) {
+            showError('No results to download. Please check combos first.');
+            return;
+        }
+        
+        console.log('Downloading results for ID:', checkId);
         
         fetch(`${BACKEND_URL}/api/results/${checkId}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
                     throw new Error(data.error);
@@ -172,9 +201,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                
+                console.log('Download completed');
             })
             .catch(error => {
-                showError(error.message);
+                handleApiError(error, 'downloading results');
             });
     });
     
@@ -193,8 +224,36 @@ document.addEventListener('DOMContentLoaded', function() {
         ].join('\n');
     }
     
+    function handleApiError(error, context) {
+        console.error(`Error in ${context}:`, error);
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            showError('Cannot connect to the server. Please check if the backend is running at: ' + BACKEND_URL);
+        } else if (error.message.includes('404')) {
+            showError('Server endpoint not found. Please check the backend API.');
+        } else if (error.message.includes('500')) {
+            showError('Server error. Please try again later.');
+        } else {
+            showError(error.message);
+        }
+    }
+    
     function showError(message) {
         errorMessage.textContent = message;
         errorSection.classList.remove('hidden');
+        console.error('Error:', message);
     }
+    
+    // Test backend connection on load
+    console.log('Testing backend connection...');
+    fetch(`${BACKEND_URL}/api/status`)
+        .then(response => {
+            if (response.ok) {
+                console.log('✓ Backend connection successful');
+            } else {
+                console.warn('⚠ Backend returned status:', response.status);
+            }
+        })
+        .catch(error => {
+            console.error('✗ Backend connection failed:', error.message);
+        });
 });
